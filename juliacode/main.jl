@@ -19,6 +19,40 @@ end
 
 begin
     prior = Uniform(-5.0, 5.0) 
+    α = 1.0
+    β = 2.0
+
+    # n = [1, 2, 4, 8, 16, 32, 64, 128, 200]
+    n = 1:200
+
+    θdist = Uniform(-π/2, π/2)
+    αrange = -6.0:0.01:6.0
+
+    anim = @animate for ni in n
+        θ_obs = rand(θdist, ni)
+        x_obs = @. α + β * tan(θ_obs)
+
+        posterior_pdf_func = create_posterior(prior, x_obs, β)
+        unnormalized_posterior_values = [posterior_pdf_func(αi) for αi in αrange]
+
+        integral_approximation = sum(unnormalized_posterior_values) * step(αrange)
+        normalized_posterior_values = if integral_approximation > 0
+            unnormalized_posterior_values ./ integral_approximation
+        else
+            unnormalized_posterior_values
+        end
+
+        plot(αrange, normalized_posterior_values, label="Posterior PDF", xlabel="Parameter (α)", 
+            ylabel="Density", title="Posterior Distribution (n = $ni)")
+        prior_pdf_values = [pdf(prior, αi) for αi in αrange]
+        plot!(αrange, prior_pdf_values, label="Prior PDF", linestyle=:dash)
+    end
+
+    gif(anim, "belief_evolution.gif", fps=7)
+end
+
+begin
+    prior = Uniform(-5.0, 5.0) 
     α = 1.0 
     β = 2.0 
 
