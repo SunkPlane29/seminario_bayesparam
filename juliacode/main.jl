@@ -48,7 +48,7 @@ begin
     savefig("posterior_1.png")
 end
 
-@model function faro(x)
+@model function farol(x)
     α ~ Uniform(-5.0, 5.0)
     β ~ Uniform(0.0, 5.0) 
 
@@ -64,7 +64,7 @@ begin
 
     x_obs = @. α + β * tan(θ_obs)
 
-    model = faro(x_obs)
+    model = farol(x_obs)
 
     # chain = sample(model, MH(), 100_000) 
     chain = sample(model, NUTS(), 10_000)
