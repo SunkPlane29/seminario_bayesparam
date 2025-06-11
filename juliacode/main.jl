@@ -104,6 +104,7 @@ begin
     chain = sample(model, NUTS(), 10_000)
     describe(chain)
     plot(chain) 
+    savefig("chain.png")
 end
 
 begin
