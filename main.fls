@@ -1,9 +1,9 @@
-PWD /home/sunkplane/Documents/seminario_bayesparam
+PWD /home/andre/Documents/seminario_bayesparam
 INPUT /etc/texmf/web2c/texmf.cnf
 INPUT /usr/share/texmf/web2c/texmf.cnf
 INPUT /usr/share/texlive/texmf-dist/web2c/texmf.cnf
 INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
-INPUT /home/sunkplane/Documents/seminario_bayesparam/main.tex
+INPUT /home/andre/Documents/seminario_bayesparam/main.tex
 OUTPUT main.log
 INPUT /usr/share/texlive/texmf-dist/tex/latex/beamer/beamer.cls
 INPUT /usr/share/texlive/texmf-dist/tex/latex/beamer/beamer.cls
