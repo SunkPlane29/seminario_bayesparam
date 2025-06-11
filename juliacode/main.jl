@@ -1,4 +1,4 @@
-using Turing, StatsPlots, Distributions, NonlinearSolve
+using Turing, StatsPlots, Distributions, NonlinearSolve, KernelDensity
 
 function create_posterior(prior_dist, x, β)
     return αi -> begin
@@ -40,9 +40,71 @@ begin
     end
 
     println(αrange[argmax(normalized_posterior_values)])
-
-    plot(αrange, normalized_posterior_values, label="Posterior PDF", xlabel="Parameter (θ)", ylabel="Density", title="Posterior Distribution")
+    plot(αrange, normalized_posterior_values, label="Posterior PDF", xlabel="Parameter (α)", 
+        ylabel="Density", title="Posterior Distribution", xlimit=(0.0, 2.0))
     
     prior_pdf_values = [pdf(prior, αi) for αi in αrange]
     plot!(αrange, prior_pdf_values, label="Prior PDF", linestyle=:dash)
+    savefig("posterior_1.png")
+end
+
+@model function faro(x)
+    α ~ Uniform(-5.0, 5.0)
+    β ~ Uniform(0.0, 5.0) 
+
+    x ~ Cauchy(α, β)
+end
+
+begin
+    α = 1.0
+    β = 2.0
+
+    θdist = Uniform(-π/2, π/2)
+    θ_obs = rand(θdist, 200) 
+
+    x_obs = @. α + β * tan(θ_obs)
+
+    model = faro(x_obs)
+
+    # chain = sample(model, MH(), 100_000) 
+    chain = sample(model, NUTS(), 10_000)
+    describe(chain)
+    plot(chain) 
+end
+
+begin
+    αvals = vec(chain[:α].data)
+    βvals = vec(chain[:β].data)
+
+    println(typeof(αvals))
+    println(typeof(βvals))
+
+    α_1σ = quantile(αvals, [0.16, 0.84])
+    α_2σ = quantile(αvals, [0.025, 0.975])
+
+    β_1σ = quantile(βvals, [0.16, 0.84])
+    β_2σ = quantile(βvals, [0.025, 0.975])
+
+    post = kde((αvals, βvals))
+
+    imax = argmax(post.density)
+
+    indα = imax[1]
+    indβ = imax[2]
+
+    α_map = post.x[indα]
+    β_map = post.y[indβ]
+
+    println("MAP α: ", α_map)
+    println("MAP β: ", β_map)
+    
+    println("α 1σ: ", α_1σ)
+    println("α 2σ: ", α_2σ)
+
+    println("β 1σ: ", β_1σ)
+    println("β 2σ: ", β_2σ)
+
+    marginalkde(αvals, βvals, levels=3, clip=((-3.0, 3.0), (-3.0, 3.0)), 
+        xlabel=raw"$\alpha$ [km]", ylabel=raw"$\beta$ [km]")
+    savefig("posterior_2.png")
 end
