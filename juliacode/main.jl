@@ -1,5 +1,6 @@
 using Turing, StatsPlots, Distributions, NonlinearSolve, KernelDensity
 
+# Cria um posterior dado um prior e os dados observados, assim como o parâmetro β
 function create_posterior(prior_dist, x, β)
     return αi -> begin
         if !(insupport(prior_dist, αi))
@@ -18,32 +19,42 @@ function create_posterior(prior_dist, x, β)
 end
 
 begin
+    # Inicializamos o prior e os parâmetros (reais) do modelo
     prior = Uniform(-5.0, 5.0) 
     α = 1.0
     β = 2.0
 
-    # n = [1, 2, 4, 8, 16, 32, 64, 128, 200]
-    n = 1:200
+    # Número de observações
+    N = 200
 
+    # Geramos os dados observados
     θdist = Uniform(-π/2, π/2)
     αrange = -6.0:0.01:6.0
+    θ_obs = rand(θdist, N)
+    x_obs = @. α + β * tan(θ_obs)
 
-    anim = @animate for ni in n
-        θ_obs = rand(θdist, ni)
-        x_obs = @. α + β * tan(θ_obs)
+    # Cada iteração do loop estaremos plotando o posterior com cada vez mais dados observados
+    anim = @animate for ni in 1:N
+        θ_obsi = θ_obs[1:ni] 
+        x_obsi = x_obs[1:ni]
 
-        posterior_pdf_func = create_posterior(prior, x_obs, β)
+        # cria o posterior
+        posterior_pdf_func = create_posterior(prior, x_obsi, β)
+        # calcula o valor do posterior para cada α no intervalo
         unnormalized_posterior_values = [posterior_pdf_func(αi) for αi in αrange]
 
+        # nomralização do posterior
         integral_approximation = sum(unnormalized_posterior_values) * step(αrange)
         normalized_posterior_values = if integral_approximation > 0
             unnormalized_posterior_values ./ integral_approximation
         else
-            unnormalized_posterior_values
+            unnormalized_posterior_values # evita divisão por zero
         end
 
+        # plota o posterior normalizado
         plot(αrange, normalized_posterior_values, label="Posterior PDF", xlabel="Parameter (α)", 
             ylabel="Density", title="Posterior Distribution (n = $ni)")
+        # plota o prior normalizado
         prior_pdf_values = [pdf(prior, αi) for αi in αrange]
         plot!(αrange, prior_pdf_values, label="Prior PDF", linestyle=:dash)
     end
@@ -51,6 +62,7 @@ begin
     gif(anim, "belief_evolution.gif", fps=7)
 end
 
+# Mesma coisa que o anterior, mas agora n é fixo
 begin
     prior = Uniform(-5.0, 5.0) 
     α = 1.0 
@@ -82,11 +94,14 @@ begin
     savefig("posterior_1.png")
 end
 
-@model function farol(x)
-    α ~ Uniform(-5.0, 5.0)
-    β ~ Uniform(0.0, 5.0) 
+# Abordagem utilizando Turing.jl com um algoritmo de amostragem MCMC
 
-    x ~ Cauchy(α, β)
+@model function farol(x)
+    α ~ Uniform(-5.0, 5.0) # "α segue uma distribuição uniforme entre -5 e 5"
+    β ~ Uniform(0.0, 5.0) # "β segue uma distribuição uniforme entre 0 e 5"
+
+    x ~ Cauchy(α, β) # "x segue uma distribuição Cauchy com parâmetros α e β"
+    #sim, é o mesmo x do argumento da função
 end
 
 begin
@@ -98,8 +113,10 @@ begin
 
     x_obs = @. α + β * tan(θ_obs)
 
+    # condicionamos o modelo aos dados observados
     model = farol(x_obs)
 
+    # fazemos a amostragem do modelo utilizando ambos Metropolis-Hastings e NUTS
     # chain = sample(model, MH(), 100_000) 
     chain = sample(model, NUTS(), 10_000)
     describe(chain)
