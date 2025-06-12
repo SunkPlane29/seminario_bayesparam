@@ -85,11 +85,14 @@ Regras de probabilidade \footcite{Sivia_2006}:
   Podemos então encontrar o teorema de Bayes quando reconhecemos que $\prob(X, Y | I) = \prob(Y, X | I)$:
   
   \begin{equation}
-  \begin{aligned}
-    \prob(X | Y, I) \prob(Y | I) &= \prob(Y | X, I) \prob(X | I), \\
-    \prob(X | Y, I) &= \frac{\prob(Y | X, I) \prob(X | I)}{\prob(Y | I)}.
-  \end{aligned}
+    \prob(X | Y, I) \prob(Y | I) = \prob(Y | X, I) \prob(X | I)
   \end{equation}
+
+  \begin{block}{Teorema de Bayes}
+  \begin{equation}
+    \prob(X | Y, I) = \frac{\prob(Y | X, I) \prob(X | I)}{\prob(Y | I)}.
+  \end{equation}
+  \end{block}
 \end{frame}
 
 \begin{frame}{Caso contínuo}
